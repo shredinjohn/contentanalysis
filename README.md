@@ -1,1 +1,1 @@
-My python project
+A python project
