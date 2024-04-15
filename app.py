@@ -10,7 +10,7 @@ from datapreprocessing import video_comments
 load_dotenv()
 import pandas as pd
 import json
-import re
+import plotly.express as px
 
 summary = ""
 
@@ -19,31 +19,32 @@ json_prompt = """
 This is how you used respond in JSON ,
 {
    "context": "YOUR_CONTEXT_HERE",
-    positiveReplies : [
+    "positiveReplies" : [
     "REPLY 1",
     "REPLY 2"
     ],
-    negativeReplies : [
+    "negativeReplies" : [
     "REPLY 1",
     "REPLY 2"
     ]
 }
- STRICTLY FOLLOW THIS, DONT MENTION "```json" at the start or "```" at the end
+ STRICTLY FOLLOW THIS DO NOT MENTION "```json" at the start or "```" at the end .
 """
 
 json_prompt_2 = """
  DONT MENTION ```json at the start or ``` at the end
 This is how you used respond in JSON ,
 {
-    positive: [
+    "positive": [
     "@user1",
     "@user2"
     ],
-    negative: [
+    "negative": [
     "@user3",
     "@user4"
     ]
 }
+STRICTLY FOLLOW THIS DO NOT MENTION "```json" at the start or "```" at the end .
 """
 
 
@@ -73,7 +74,6 @@ def generate_gemini_summary(prompt):
     model=genai.GenerativeModel("gemini-pro")
     generation_config = genai.GenerationConfig(
         temperature=0,
-        top_k=3
     )
     safety_settings={
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -86,7 +86,7 @@ def generate_gemini_summary(prompt):
 
 #generating summarize from the transcript 
 def generate_gemini_content(prompt,transcript_text):
-    model=genai.GenerativeModel("gemini-pro")
+    model=genai.GenerativeModel("gemini-1.0-pro-latest")
     generation_config = genai.GenerationConfig(
         temperature=0
     )
@@ -122,8 +122,6 @@ def sentiment(positive_replies , negative_replies):
         # Parse the JSON string into a dictionary
         sentiments = json.loads(sentiments_json)
 
-        df = pd.read_csv('comments_filtered.csv')
-
         # Extract positive and negative usernames
         positive_users = sentiments["positive"]
         negative_users = sentiments["negative"]
@@ -137,11 +135,11 @@ def sentiment(positive_replies , negative_replies):
             else:
                 return None
 
-        # Apply the function to the "User ID" column
-        df["sentiment"] = df["User ID"].apply(categorize_sentiment)
+        # Apply the function to the "User ID" column of the current batch
+        df.loc[i:i+100, "sentiment"] = df.loc[i:i+100, "User ID"].apply(categorize_sentiment)
 
-        # Save the DataFrame back to the CSV file
-        df.to_csv('comments_filtered.csv', index=False)
+    # Save the DataFrame back to the CSV file after processing all batches
+    df.to_csv('comments_filtered.csv', index=False)
 
 def process_replies(summary):
     data = json.loads(summary)
@@ -150,6 +148,15 @@ def process_replies(summary):
     # Join the negative replies into a single string
     negative_replies = '\n'.join(data['negativeReplies'])
     return positive_replies, negative_replies
+
+
+def visualize_sentiments(df):
+    sentiment_counts = df["sentiment"].value_counts().reset_index()
+    sentiment_counts.columns = ['sentiment', 'count']
+    fig = px.pie(sentiment_counts, values='count', names='sentiment')
+    st.plotly_chart(fig)
+
+
 
 # App UI
 st.title("Content Analysis using Gemini AI")
@@ -167,6 +174,9 @@ if st.button("Get Detailed Notes "):
         preprocess_comments('comments.csv', 'comments_filtered.csv')
         positive_replies,negative_replies=process_replies(summary)
         sentiment(positive_replies,negative_replies)
+        df = pd.read_csv("comments_filtered.csv")
+        st.subheader("Sentiment Distribution")
+        visualize_sentiments(df)
         st.balloons()
         
 
