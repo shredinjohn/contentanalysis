@@ -63,8 +63,7 @@ def extract_transcript_details(youtube_video_url):
 def generate_gemini_summary(prompt):
     model=genai.GenerativeModel("gemini-1.5-pro-latest")
     generation_config = genai.GenerationConfig(
-        temperature=0,
-        top_k=3
+        temperature=0
     )
     safety_settings={
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -110,7 +109,7 @@ def sentiment(summary):
         Here are some tones that you are required to use
         Positive Tones: Joyful, Excited, Confident, Surprised, Peaceful, Loving, Hopeful, Optimistic, Amused, Content, Proud, Grateful, Appreciative, Ecstatic
         Negative Tones: Sad, Angry, Fearful, Pessimistic, Frustrated, Anxious, Disappointed, Gloomy, Depressed, Irritated, Resentful, Envious, Bitter, Worried
-        Don't Limit yourself to these tones, these are just examples
+        Don't Limit yourself to these tones, these are just examples.
         {json_prompt_2}      
         Comments: {comments}
         """

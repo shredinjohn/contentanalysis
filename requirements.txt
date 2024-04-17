@@ -3,3 +3,4 @@ google-generativeai
 python-dotenv
 pathlib
 st-pages
+google-api-python-client

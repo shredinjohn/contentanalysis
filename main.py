@@ -1,9 +1,10 @@
 import streamlit as st
 import webbrowser
 from app import extract_transcript_details,generate_gemini_content,video_comments,preprocess_comments,sentiment
-from pages.visualization import visualize_sentiments
 import os
-import pandas as pd
+
+youtube_link=""
+summary=""
 
 st.set_page_config(page_title="Ai Content Analyzer", page_icon=":robot_face:", layout="wide")
 st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True)
